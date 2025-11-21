@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Магазин Лепестков</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{background:url('фыв.jpg') center/cover fixed;min-height:100vh;}
+  .overlay{position:fixed;inset:0;background:rgba(7,10,25,0.45);backdrop-filter:blur(6px);z-index:0}
+  .container{position:relative;z-index:1;max-width:1100px;margin:40px auto;padding:24px}
+  .card{transition:transform .25s ease, box-shadow .25s ease}
+  .card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.25)}
+</style>
+</head>
+<body class="antialiased text-slate-900">
+<div class="overlay"></div>
+<div class="container">
+  <header class="flex items-center justify-between mb-6">
+    <h1 class="text-4xl font-extrabold text-white">Магазин «Лепестки»</h1>
+    <nav class="space-x-3">
+      <a href="cart.html" class="px-3 py-2 bg-emerald-500 text-white rounded-lg shadow">Корзина</a>
+    </nav>
+  </header>
+
+  <div id="products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+  <div class="mt-8 text-white/80">Если товаров нет — добавьте их в админке.</div>
+</div>
+
+<script>
+function load(k){try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return[];}}
+function save(k,v){localStorage.setItem(k, JSON.stringify(v));}
+
+function render(){
+  const list = load('products');
+  const out = document.getElementById('products');
+  if(!list.length){ out.innerHTML = '<div class="p-6 bg-white/80 rounded-lg text-center">Товары отсутствуют. Перейдите в админку и добавьте товары.</div>'; return; }
+  out.innerHTML = list.map((p, i) => `
+    <div class="card bg-white rounded-2xl p-4 shadow-lg">
+      <div class="h-48 flex items-center justify-center bg-white/50 rounded-lg mb-3 overflow-hidden"><img src="${p.img}" onerror="this.src='6873440802.jpg'" class="max-h-full" /></div>
+      <h3 class="text-xl font-semibold mb-1">${p.title}</h3>
+      <p class="text-sm text-slate-600 mb-3">${p.desc||''}</p>
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-emerald-600">${Number(p.price||0).toFixed(2)} ₽</div>
+        <div class="flex gap-2">
+          <button class="px-3 py-1 bg-emerald-600 text-white rounded" onclick="addToCart(${i})">В корзину</button>
+          <button class="px-3 py-1 border rounded" onclick="buyNow(${i})">Купить</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addToCart(i){
+  const list = load('products');
+  const p = list[i];
+  if(!p) return alert('Товар не найден');
+  const cart = load('cart');
+  const existing = cart.find(x=>x.id===p.id);
+  if(existing) existing.qty = (existing.qty||1)+1; else cart.push({...p, qty:1});
+  save('cart', cart);
+  const btn = event.target;
+  btn.classList.add('scale-95');
+  setTimeout(()=>btn.classList.remove('scale-95'),150);
+  alert('Добавлено в корзину');
+}
+
+function buyNow(i){
+  const list = load('products');
+  const p = list[i];
+  if(!p) return alert('Товар не найден');
+  save('cart', [{...p, qty:1}]);
+  location.href='checkout.html';
+}
+
+(function(){ const list=load('products'); let changed=false; for(let i=0;i<list.length;i++){ if(!list[i].id){ list[i].id = Date.now()+i; changed=true;} } if(changed) save('products',list);} )();
+
+render();
+</script>
+</body>
+</html>
